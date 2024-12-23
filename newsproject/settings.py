@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-k_(+a4ha=f@ibr7qfah4!$v^cb*%7g(=1_3&c%ix6mz4-jgwf6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -74,7 +74,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "newsproject.wsgi.application"
-
+ALLOWED_HOSTS = [
+    'restapi-task-fydl.onrender.com',
+    '127.0.0.1',
+    'localhost',
+]
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
