@@ -8,6 +8,7 @@ from django.db.models import Max, Count, Avg
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
+
 @csrf_exempt
 def NewsApi(request, id=0):
     try:
