@@ -45,11 +45,14 @@ def NewsApi(request, id=0):
             return JsonResponse("Failed to Update", safe=False)
 
         elif request.method == "DELETE":
-            # Handle DELETE request to delete a news item
-            news = News.objects.get(id=id)
-            news.delete()
-            return JsonResponse("Deleted Successfully", safe=False)
-
+            try:
+                # Attempt to retrieve and delete the News object by the provided ID
+                news = News.objects.get(id=id)
+                news.delete()
+                return JsonResponse({'message': f'News item with ID {id} has been deleted successfully.'}, status=200)
+            except ObjectDoesNotExist:  # Handle the case where the News object doesn't exist
+                return JsonResponse({'error': f'News item with ID {id} not found.'}, status=404)
+            
     except News.DoesNotExist:
         # Handle case where news item is not found
         return JsonResponse("News item not found", status=404)
