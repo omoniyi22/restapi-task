@@ -5,7 +5,7 @@ from django.urls import re_path
 
 urlpatterns = [
     path("news", views.NewsApi),  # create news
-    path("news/<int:id>/", views.NewsApi),  # For GET (single news), PUT, and DELETE
+    path("news/<int:id>", views.NewsApi),  # For GET (single news), PUT, and DELETE
     path("news/view/<int:id>", views.ViewApi),  # For GET (single news), PUT, and DELETE
     path("news/paginated/", views.PaginatedNewsApi),
     path("news/reactions", views.ReactionApi),
