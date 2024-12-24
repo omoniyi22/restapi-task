@@ -17,22 +17,27 @@ def NewsApi(request, id=0):
                 news = News.objects.all()
                 news_serializer = NewsSerializer(news, many=True)
                 return JsonResponse(news_serializer.data, safe=False)
-            else:  # Retrieve a single news item by ID
+            else:  # Retrieve a single news item by ID and increment the like count
                 try:
                     news = News.objects.get(id=id)  # Ensure correct field name for lookup
+                    # Increment the like count
+                    news.like += 1
+                    news.save()  # Save the updated news item
+
+                    # Serialize the updated news item
                     news_serializer = NewsSerializer(news)
                     return JsonResponse(news_serializer.data, safe=False)
                 except News.DoesNotExist:
                     return JsonResponse({"error": "News item not found"}, status=404)
-
         elif request.method == "POST":
             # Handle POST request to create a new news item
             news_data = JSONParser().parse(request)
             news_serializer = NewsSerializer(data=news_data)
             if news_serializer.is_valid():
-                news_serializer.save()
-                return JsonResponse("Added Successfully", safe=False)
-            return JsonResponse("Fail To Add", safe=False)
+                news_instance = news_serializer.save()  # Save the news item
+                # Serialize the saved instance to include it in the response
+                return JsonResponse(news_serializer.data, safe=False, status=201)
+            return JsonResponse(news_serializer.errors, safe=False, status=400)
 
         elif request.method == "PUT":
             # Handle PUT request to update a news item
@@ -67,21 +72,32 @@ def ReactionApi(request, id=0):
             news = News.objects.get(id=news_id)  # Assumes 'id' for lookup
             
             action = news_data.get("action")  # Expecting 'like', 'dislike', or 'view'
+            sign = news_data.get("sign")  # Expecting 'like', 'dislike', or 'view'
 
             if action == "like":
-                news.like += 1
-                news.save()
-                return JsonResponse({"message": "Like incremented", "like_count": news.like}, safe=False)
+                if sign == "-":
+                    news.like -= 1
+                    news.save()
+                    return JsonResponse({"message": "Like decremented", "count": news.like}, safe=False)
+                if sign == "+":
+                    news.like += 1
+                    news.save()
+                    return JsonResponse({"message": "Like incremented", "count": news.like}, safe=False)
             
             elif action == "dislike":
-                news.dislike += 1
-                news.save()
-                return JsonResponse({"message": "Dislike incremented", "dislike_count": news.dislike}, safe=False)
+                if sign == "+":
+                    news.dislike += 1
+                    news.save()
+                    return JsonResponse({"message": "Dislike incremented", "count": news.dislike}, safe=False)            
+                if sign == "-":
+                    news.dislike -= 1
+                    news.save()
+                    return JsonResponse({"message": "Dislike decremented", "count": news.dislike}, safe=False)
             
             elif action == "view":
                 news.views += 1
                 news.save()
-                return JsonResponse({"message": "View incremented", "view_count": news.views}, safe=False)
+                return JsonResponse({"message": "View incremented", "count": news.views}, safe=False)
             
             else:
                 return JsonResponse({"error": "Invalid action"}, status=400)
@@ -93,12 +109,11 @@ def ReactionApi(request, id=0):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     
-
 @csrf_exempt
 def PaginatedNewsApi(request):
     try:
         # Get query parameters
-        page = request.GET.get("page", 1)  # Default to page 1
+        page = int(request.GET.get("page", 1))  # Default to page 1
         tags = request.GET.get("tags", None)  # Optional filtering by tags
 
         # Filter news by tags if provided
@@ -119,18 +134,20 @@ def PaginatedNewsApi(request):
         # Serialize the paginated data
         news_serializer = NewsSerializer(news, many=True)
 
+        # Add the `has_more` property
+        has_more = page < paginator.num_pages
+
         # Return paginated response
         return JsonResponse({
             "total_pages": paginator.num_pages,
-            "current_page": int(page),
+            "current_page": page,
             "total_items": paginator.count,
+            "has_more": has_more,
             "news": news_serializer.data
         }, safe=False)
 
     except Exception as e:
         return JsonResponse({"error": f"Error occurred: {str(e)}"}, status=500)
-
-
 
 @csrf_exempt
 def StatisticsView(request):

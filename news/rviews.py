@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from .models import News
-from .serializer import NewsSerializer
+from .serializers import NewsSerializer
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound
 
@@ -70,3 +70,4 @@ class NewsViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except News.DoesNotExist:
             raise NotFound(detail="News item not found.")
+        
