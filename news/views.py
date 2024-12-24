@@ -20,11 +20,6 @@ def NewsApi(request, id=0):
             else:  # Retrieve a single news item by ID and increment the like count
                 try:
                     news = News.objects.get(id=id)  # Ensure correct field name for lookup
-                    # Increment the like count
-                    news.like += 1
-                    news.save()  # Save the updated news item
-
-                    # Serialize the updated news item
                     news_serializer = NewsSerializer(news)
                     return JsonResponse(news_serializer.data, safe=False)
                 except News.DoesNotExist:
@@ -108,7 +103,31 @@ def ReactionApi(request, id=0):
         return JsonResponse({"error": "News item not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
+
+@csrf_exempt
+def ViewApi(request, id=0):
+    try:
+        if request.method == "GET":
+            try:
+                news = News.objects.get(id=id)  # Ensure correct field name for lookup
+                # Increment the like count
+                news.views += 1
+                news.save()  # Save the updated news item
+
+                # Serialize the updated news item
+                news_serializer = NewsSerializer(news)
+                return JsonResponse(news_serializer.data, safe=False)
+            except News.DoesNotExist:
+                return JsonResponse({"error": "News item not found"}, status=404)
+    except News.DoesNotExist:       
+    # Handle case where news item is not found
+        return JsonResponse("News item not found", status=404)
+    except Exception as e:
+        # Catch any other exceptions
+        return JsonResponse(f"Error occurred: {str(e)}", status=500)
+
 @csrf_exempt
 def PaginatedNewsApi(request):
     try:
