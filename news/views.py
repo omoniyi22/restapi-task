@@ -79,6 +79,7 @@ def ReactionApi(request, id=0):
                     news.save()
                     return JsonResponse({"message": "Like incremented", "count": news.like}, safe=False)
             
+            
             elif action == "dislike":
                 if sign == "+":
                     news.dislike += 1
